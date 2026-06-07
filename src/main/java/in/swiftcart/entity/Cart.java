@@ -43,7 +43,7 @@ public class Cart {
 	
 	@OneToMany(mappedBy="cart" , cascade=CascadeType.ALL , orphanRemoval= true)
 	@Builder.Default
-	private List<CartItems> cartItems = new ArrayList<>();
+	private List<CartItem> cartItems = new ArrayList<>();
 	
 	@Column
 	@Builder.Default
@@ -58,6 +58,40 @@ public class Cart {
 	private LocalDateTime createdAt;
 	
 	@UpdateTimestamp
-	private LocalDateTime updatedAt;
+	private LocalDateTime updatedAt ;
 	
+	// Helper Methods for adding item into a carts
+	public void addCartItem(CartItem item) {
+		cartItems.add(item);
+		
+		item.setCart(this); //setting  back refrence  without this we go cart to cartitem but we don't come from cartitem to cart so we ca set back refrence
+	}
+	
+	public void removeCartItem(CartItem item) {
+		cartItems.remove(item);
+		item.setCart(null); // for cleaning the db with the help of orphanremoval 
+		
+	}
+	
+	public void recalculateTotals() {
+		int totalItemCount = 0;
+		for(cartItem item :cartItems) {
+			totalItemCount += item.getQuantity();
+		}
+		this.totalItems = totalItemCount;
+		double total = 0.0;
+		for(cartItem item :cartItems) {
+			total = total +item.getSubTotal();
+		}
+		this.totalAmmount = total;
+	}
+	
+	public void clearCart() {
+		for(CartItem item:new ArrayList<>(cartItems)) {
+			item.setCart(null);
+		}
+		cartItems.clear(); 
+		this.totalAmmount=0.0;
+		this.totalItems=0;	
+	}
 }

@@ -1,5 +1,5 @@
 package in.swiftcart.entity;
 
-public class CartItems {
+public class CartItem {
 
 }
