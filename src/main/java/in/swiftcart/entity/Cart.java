@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name="users")
+@Table(name="carts")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -65,22 +65,24 @@ public class Cart {
 		cartItems.add(item);
 		
 		item.setCart(this); //setting  back refrence  without this we go cart to cartitem but we don't come from cartitem to cart so we ca set back refrence
+		recalculateTotals();
 	}
 	
 	public void removeCartItem(CartItem item) {
 		cartItems.remove(item);
 		item.setCart(null); // for cleaning the db with the help of orphanremoval 
+		recalculateTotals();
 		
 	}
 	
 	public void recalculateTotals() {
 		int totalItemCount = 0;
-		for(cartItem item :cartItems) {
+		for(CartItem item :cartItems) {
 			totalItemCount += item.getQuantity();
 		}
 		this.totalItems = totalItemCount;
 		double total = 0.0;
-		for(cartItem item :cartItems) {
+		for(CartItem item :cartItems) {
 			total = total +item.getSubTotal();
 		}
 		this.totalAmmount = total;
