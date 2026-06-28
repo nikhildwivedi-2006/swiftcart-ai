@@ -19,7 +19,7 @@ public interface ProductRepository extends JpaRepository<Product , Long>{
 	boolean existsBySku(String sku);
 	
 	//find all avilable products
-	List<Product>findByIsAvilableTrue();
+	List<Product>findByIsAvailableTrue();
 	
 	//find products by category
 	List<Product>findByCategoryIgnoreCase(String category);
