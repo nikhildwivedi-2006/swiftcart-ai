@@ -232,7 +232,7 @@ public class ProductServiceImpl implements ProductService {
 	        int newStock = product.getStockQuantity() + quantity;
 	        if (newStock < 0) {
 	            throw new IllegalArgumentException(
-	                    "Stock cannot be negative. Current stock: " + product.getStockQuantity());
+	                    "Stock quantity cannot be negative. Current stock: " + product.getStockQuantity());
 	        }
 	        product.setStockQuantity(newStock);
 	        productRepository.save(product);
@@ -241,9 +241,12 @@ public class ProductServiceImpl implements ProductService {
 	    //get low stock products
 	    @Override
 	    public List<ProductResponseDTO> getLowStockProducts(Integer threshold) {
-	        List<Product> products = productRepository.findLowStockProducts(threshold);
+	    	if(threshold<0) {
+	    		throw new IllegalArgumentException("Threshold cannot be negative:" +threshold);
+	    	}
+	        List<Product> productList = productRepository.findLowStockProducts(threshold);
 	        List<ProductResponseDTO> responseList = new ArrayList<>();
-	        for (Product product : products) {
+	        for (Product product : productList) {
 	            responseList.add(mapToResponseDTO(product));
 	        }
 	        return responseList;
