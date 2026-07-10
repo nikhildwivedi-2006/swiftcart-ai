@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+
 import in.swiftcart.dtorequest.AddToCartRequestDTO;
 import in.swiftcart.dtorequest.UpdateCartItemRequestDTO;
 import in.swiftcart.dtoresponse.CartItemResponseDTO;
@@ -16,12 +18,17 @@ import in.swiftcart.exception.ResourceNotFoundException;
 import in.swiftcart.repository.CartItemRepository;
 import in.swiftcart.repository.CartRepository;
 import in.swiftcart.repository.ProductRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
+@Service
+@RequiredArgsConstructor
+@Transactional
 public class CartServiceImpl implements CartService {
 
-	 private  CartRepository cartRepository;
-	    private  CartItemRepository cartItemRepository;
-	    private  ProductRepository productRepository;
+	 private  final CartRepository cartRepository;
+	    private final   CartItemRepository cartItemRepository;
+	    private final ProductRepository productRepository;
 
 	// ==================== HELPERS ====================
 
