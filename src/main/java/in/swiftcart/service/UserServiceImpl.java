@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import in.swiftcart.dtorequest.UpdateUserRequestDTO;
@@ -15,15 +15,16 @@ import in.swiftcart.entity.User;
 import in.swiftcart.exception.DuplicateResourceException;
 import in.swiftcart.exception.ResourceNotFoundException;
 import in.swiftcart.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class  UserServiceImpl implements UserService{
 	
 	private final UserRepository userRepo;
-	@Autowired
-	public UserServiceImpl(UserRepository userRepo) {
-		this.userRepo= userRepo;
-	}
+	private final PasswordEncoder passwordEncoder;
+	
+	
 	
 	
 	@Override
@@ -37,7 +38,7 @@ public class  UserServiceImpl implements UserService{
         User user = User.builder()
                 .fullName(userRequestDTO.getFullName())
                 .email(userRequestDTO.getEmail())
-                .password(userRequestDTO.getPassword()) // In real app, encode password
+                .password(passwordEncoder.encode(userRequestDTO.getPassword())) //encoded password
                 .phone(userRequestDTO.getPhone())
                 .address(userRequestDTO.getAddress())
                 .build();

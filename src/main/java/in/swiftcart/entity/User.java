@@ -3,9 +3,12 @@ package in.swiftcart.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import in.swiftcart.enums.Role;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,8 +40,13 @@ public class User {
 	@Column(nullable = false , unique = true , length = 100)
 	private String email;
 	
-	@Column(nullable = false , length = 25)
+	@Column(nullable = false , length = 100)
 	private String password;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	@Builder.Default
+	private Role role = Role.USER;
 	
 	@Column(length = 15)
 	private String phone;
