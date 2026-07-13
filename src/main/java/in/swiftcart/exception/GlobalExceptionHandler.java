@@ -144,6 +144,21 @@ public class GlobalExceptionHandler {
 	}
 	
 	
+	// Handle Invalid Token Exception (JWT related)
+	@ExceptionHandler(InvalidTokenException.class)
+	public ResponseEntity<ErrorResponse> handleInvalidTokenException(InvalidTokenException ex, HttpServletRequest request) {
+
+	    ErrorResponse error = ErrorResponse.builder()
+	            .timeStamp(LocalDateTime.now())
+	            .status(HttpStatus.UNAUTHORIZED.value())
+	            .error("Invalid Token")
+	            .message(ex.getMessage())
+	            .path(request.getRequestURI())
+	            .build();
+
+	    return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+	}
+	
 	// Handle all other remaining Exception 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleException(Exception ex , HttpServletRequest request){
