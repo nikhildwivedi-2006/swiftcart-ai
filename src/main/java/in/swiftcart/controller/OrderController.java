@@ -19,6 +19,7 @@ import in.swiftcart.dtorequest.UpdateOrderStatusRequestDTO;
 import in.swiftcart.dtoresponse.ApiResponseDTO;
 import in.swiftcart.dtoresponse.OrderResponseDTO;
 import in.swiftcart.dtoresponse.PageResponseDTO;
+import in.swiftcart.enums.OrderStatus;
 import in.swiftcart.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,10 +76,10 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponseDTO.success(orders));
     }
 
-    //Get orders by status
     @GetMapping("/status/{status}")
     public ResponseEntity<ApiResponseDTO<List<OrderResponseDTO>>> getOrdersByStatus(
-            @PathVariable String status) {
+            @PathVariable OrderStatus status) {
+
         List<OrderResponseDTO> orders = orderService.getOrdersByStatus(status);
         return ResponseEntity.ok(ApiResponseDTO.success(orders));
     }

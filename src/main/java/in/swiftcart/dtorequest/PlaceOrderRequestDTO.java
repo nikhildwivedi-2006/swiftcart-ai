@@ -1,5 +1,6 @@
 package in.swiftcart.dtorequest;
 
+import in.swiftcart.enums.PaymentMethod;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -20,4 +21,8 @@ public class PlaceOrderRequestDTO {
 	
 	@Size(max=500 , message ="Notes must not exceed 500 characters")
 	private String notes;
+	
+	@NotNull(message = "Payment method is required")
+	private PaymentMethod paymentMethod;
+	
 }

@@ -22,6 +22,8 @@ import in.swiftcart.entity.Order;
 import in.swiftcart.entity.OrderItem;
 import in.swiftcart.entity.Product;
 import in.swiftcart.entity.User;
+import in.swiftcart.enums.OrderStatus;
+import in.swiftcart.enums.PaymentStatus;
 import in.swiftcart.exception.EmptyCartException;
 import in.swiftcart.exception.InsufficientStockException;
 import in.swiftcart.exception.InvalidOperationException;
@@ -89,12 +91,14 @@ public class OrderServiceImpl implements OrderService {
             totalAmount = totalAmount + cartItem.getSubTotal();
         }
 
-        // Create order
+     // Create order
         Order order = Order.builder()
                 .user(user)
                 .totalAmmount(totalAmount)
                 .notes(placeOrderRequestDTO.getNotes())
-                .status(Order.STATUS_CONFIRMED)
+                .status(OrderStatus.PENDING)
+                .paymentMethod(placeOrderRequestDTO.getPaymentMethod())
+                .paymentStatus(PaymentStatus.PENDING)
                 .build();
 
         Order savedOrder = orderRepository.save(order);
@@ -165,8 +169,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponseDTO> getOrdersByStatus(String status) {
+    public List<OrderResponseDTO> getOrdersByStatus(OrderStatus status) {
         List<Order> orders = orderRepository.findByStatus(status);
+
         List<OrderResponseDTO> responseList = new ArrayList<>();
         for (Order order : orders) {
             responseList.add(mapToOrderResponseDTO(order));
@@ -178,11 +183,13 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO updateOrderStatus(Long orderId, UpdateOrderStatusRequestDTO updateOrderStatusRequestDTO) {
         Order order = findOrderById(orderId);
 
-        validateStatusTransition(order.getStatus(), updateOrderStatusRequestDTO.getOrderStatus().toUpperCase());
+        OrderStatus newStatus = updateOrderStatusRequestDTO.getOrderStatus();
 
-        order.setStatus(updateOrderStatusRequestDTO.getOrderStatus().toUpperCase());
+        validateStatusTransition(order.getStatus(), newStatus);
 
-        if (Order.STATUS_CANCELLED.equals(updateOrderStatusRequestDTO.getOrderStatus().toUpperCase())) {
+        order.setStatus(newStatus);
+
+        if (newStatus == OrderStatus.CANCELLED) {
             restoreStock(order);
         }
 
@@ -200,11 +207,11 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
-        if (!Order.STATUS_CONFIRMED.equalsIgnoreCase(order.getStatus())) {
+        if (order.getStatus() != OrderStatus.CONFIRMED) {
             throw new InvalidOperationException("Cannot cancel order with status: " + order.getStatus());
         }
 
-        order.setStatus(Order.STATUS_CANCELLED);
+        order.setStatus(OrderStatus.CANCELLED);
 
         String notes = order.getNotes() != null ? order.getNotes() + "\n" : "";
         order.setNotes(notes +" Cancelled: " + reason);
@@ -233,13 +240,19 @@ public class OrderServiceImpl implements OrderService {
     }
 
     // Helper: validate status transition
-    private void validateStatusTransition(String currentStatus, String newStatus) {
-        if (Order.STATUS_CONFIRMED.equals(currentStatus)) {
-            if (!Order.STATUS_CANCELLED.equals(newStatus)) {
-                throw new InvalidOperationException("Cannot transition from CONFIRMED to " + newStatus);
+    private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+
+        if (currentStatus == OrderStatus.CONFIRMED) {
+
+            if (newStatus != OrderStatus.CANCELLED) {
+                throw new InvalidOperationException(
+                        "Cannot transition from CONFIRMED to " + newStatus);
             }
-        } else if (Order.STATUS_CANCELLED.equals(currentStatus)) {
-            throw new InvalidOperationException("Cannot change status of " + currentStatus + " order");
+
+        } else if (currentStatus == OrderStatus.CANCELLED) {
+
+            throw new InvalidOperationException(
+                    "Cannot change status of " + currentStatus + " order");
         }
     }
 
@@ -274,7 +287,7 @@ public class OrderServiceImpl implements OrderService {
                 .items(items)
                 .totalItems(totalItems)
                 .totalAmount(order.getTotalAmmount())
-                .status(order.getStatus())
+                .status(order.getStatus().name())
                 .notes(order.getNotes())
                 .orderDate(order.getOrderDate())
                 .build();
@@ -313,4 +326,6 @@ public class OrderServiceImpl implements OrderService {
                 .hasPrevious(orderPage.hasPrevious())
                 .build();
     }
+
+	
 }

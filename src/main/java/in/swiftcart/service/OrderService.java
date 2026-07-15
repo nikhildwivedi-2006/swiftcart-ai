@@ -6,6 +6,7 @@ import in.swiftcart.dtorequest.PlaceOrderRequestDTO;
 import in.swiftcart.dtorequest.UpdateOrderStatusRequestDTO;
 import in.swiftcart.dtoresponse.OrderResponseDTO;
 import in.swiftcart.dtoresponse.PageResponseDTO;
+import in.swiftcart.enums.OrderStatus;
 
 public interface OrderService {
 
@@ -19,7 +20,7 @@ public interface OrderService {
 
     PageResponseDTO<OrderResponseDTO> getAllOrdersPaginated(int page, int size, String sortBy, String sortDir);
 
-    List<OrderResponseDTO> getOrdersByStatus(String status);
+    List<OrderResponseDTO> getOrdersByStatus(OrderStatus status);
 
     OrderResponseDTO updateOrderStatus(Long orderId, UpdateOrderStatusRequestDTO updateOrderStatusRequestDTO);
 

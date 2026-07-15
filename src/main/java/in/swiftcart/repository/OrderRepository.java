@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import in.swiftcart.entity.Order;
+import in.swiftcart.enums.OrderStatus;
 
 public interface OrderRepository extends JpaRepository<Order , Long>{
 	
@@ -20,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Order , Long>{
 	Page<Order> findByUserId(Long userId , Pageable pageable);
 	
 	//find order by status 
-	List<Order> findByStatus(String status);
+	List<Order> findByStatus(OrderStatus status);
 	
 	//find order with items
 	@Query("""

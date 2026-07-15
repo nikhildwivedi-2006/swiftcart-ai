@@ -41,17 +41,15 @@ public class SecurityConfig {
         .addFilterBefore(jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class)
 
-        .authorizeHttpRequests(auth -> auth
-        		// Public APIs
-        	    .requestMatchers("/api/auth/**").permitAll()
-        	    .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-
-        	    // Protected APIs
-        	    .anyRequest().authenticated()
-        	
-        );
+         
+        		 .authorizeHttpRequests(auth -> auth
+        				    .anyRequest().permitAll()
+        			
+          );
 
         return http.build();
+
+       
     }
 
     @Bean

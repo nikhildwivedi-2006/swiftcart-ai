@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
+import in.swiftcart.enums.OrderStatus;
+import in.swiftcart.enums.PaymentMethod;
+import in.swiftcart.enums.PaymentStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,14 +54,28 @@ public class Order {
 	
 	private Double totalAmmount;
 	
-	public final static String STATUS_CONFIRMED="CONFIRMED";
-	public final static String STATUS_CANCELLED="CANCELLED";
-	@Column(nullable=false , length=20)
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	@Builder.Default
-	private String status = STATUS_CONFIRMED;
+	private OrderStatus status = OrderStatus.CONFIRMED;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private PaymentMethod paymentMethod;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private PaymentStatus paymentStatus;
+	
+	private String razorpayOrderId;
+
+	private String razorpayPaymentId;
+
+	private String razorpaySignature;
+	
 	
 	private String notes;
-	
+
 	private LocalDateTime orderDate;
 	
 	//helper method
