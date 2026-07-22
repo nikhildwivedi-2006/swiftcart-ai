@@ -267,6 +267,16 @@ public class ProductServiceImpl implements ProductService {
 	            throw new ResourceNotFoundException("Product", "id", id);
 	        }
 	    }
+	    
+	    @Override
+	    public void deleteProduct(Long id) {
+
+	        Product product = productRepository.findById(id)
+	                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+	        productRepository.delete(product);
+	    }
+	    
 
 	    // Helper: create Pageable
 	    private Pageable createPageable(int page, int size, String sortBy, String sortDir) {

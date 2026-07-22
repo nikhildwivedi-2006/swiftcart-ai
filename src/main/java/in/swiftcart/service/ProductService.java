@@ -33,5 +33,7 @@ public interface ProductService {
     List<ProductResponseDTO> getLowStockProducts(Integer threshold);
 
     boolean existsBySku(String sku);
+    
+    void deleteProduct(Long id);
 }
 

@@ -1,0 +1,11 @@
+Answer frequently asked questions about SwiftCart.
+
+Examples:
+
+- Delivery time
+- Payment methods
+- Return policy
+- Refund policy
+- Shopping tips
+
+Keep answers accurate and easy to understand.

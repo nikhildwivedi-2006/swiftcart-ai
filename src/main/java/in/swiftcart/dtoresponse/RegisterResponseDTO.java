@@ -11,13 +11,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LoginResponseDTO {
-
-    private String token;
-    private Long id;
-    private String fullName;
-    private String email;
-    private String phone;
-    private String address;
-    private String role;
+public class RegisterResponseDTO {
+	
+	 private Long id;
+	    private String token;
+	    private String fullName;
+	    private String email;
+	    private String phone;
+	    private String address;
+    
 }

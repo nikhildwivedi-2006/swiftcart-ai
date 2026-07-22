@@ -42,11 +42,28 @@ public class SecurityConfig {
                 UsernamePasswordAuthenticationFilter.class)
 
          
-        		 .authorizeHttpRequests(auth -> auth
-        				    .anyRequest().permitAll()
-        			
-          );
+        .authorizeHttpRequests(auth -> auth
 
+        	    // Public
+        	    .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+
+        	    // Products GET — for everyone
+        	    .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+
+        	    // Admin only
+        	    .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+        	    .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+        	    .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+
+        	    // Authenticated users
+        	    .requestMatchers("/api/orders/**").hasAnyRole("USER", "ADMIN")
+        	    .requestMatchers("/api/cart/**").hasAnyRole("USER", "ADMIN")
+        	    .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
+        	    .requestMatchers("/api/ai/**").hasAnyRole("USER", "ADMIN")
+
+        	 // All other requests require authentication
+        	    .anyRequest().authenticated()
+        	);
         return http.build();
 
        
