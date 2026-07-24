@@ -138,6 +138,7 @@ Planned deployment:
 - Postman
 - AWS (Deployment in progress)
 
+---
 
 # 🏗️ Architecture
 
@@ -170,9 +171,6 @@ SwiftCart follows a layered backend architecture to maintain clean code separati
 - **Payment Service**
   - Handles Razorpay payment creation and verification
 
----
-
-# 📂 Project Structure
 ---
 
 # 📂 Project Structure
