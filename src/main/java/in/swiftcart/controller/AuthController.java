@@ -13,6 +13,7 @@ import in.swiftcart.dtoresponse.ApiResponseDTO;
 import in.swiftcart.dtoresponse.LoginResponseDTO;
 import in.swiftcart.dtoresponse.RegisterResponseDTO;
 import in.swiftcart.service.AuthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -20,33 +21,23 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Authentication", description = "APIs for user authentication and authorization")
 public class AuthController {
 
-    private final AuthService authService;
+	private final AuthService authService;
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponseDTO<LoginResponseDTO>> login(
-            @Valid @RequestBody LoginRequestDTO request) {
+	@PostMapping("/login")
+	public ResponseEntity<ApiResponseDTO<LoginResponseDTO>> login(@Valid @RequestBody LoginRequestDTO request) {
 
-        LoginResponseDTO response = authService.login(request);
+		LoginResponseDTO response = authService.login(request);
 
-        return ResponseEntity.ok(
-                ApiResponseDTO.success(
-                        "Login successful",
-                        response
-                )
-        );
-    }
-    
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponseDTO<RegisterResponseDTO>> register(
-            @Valid @RequestBody RegisterRequestDTO request) {
-        RegisterResponseDTO response = authService.register(request);
-        return ResponseEntity.ok(
-                ApiResponseDTO.success(
-                        "Registration successful",
-                        response
-                )
-        );
-    }
+		return ResponseEntity.ok(ApiResponseDTO.success("Login successful", response));
+	}
+
+	@PostMapping("/register")
+	public ResponseEntity<ApiResponseDTO<RegisterResponseDTO>> register(
+			@Valid @RequestBody RegisterRequestDTO request) {
+		RegisterResponseDTO response = authService.register(request);
+		return ResponseEntity.ok(ApiResponseDTO.success("Registration successful", response));
+	}
 }

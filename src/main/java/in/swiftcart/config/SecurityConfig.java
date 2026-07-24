@@ -45,7 +45,12 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
 
         	    // Public
-        	    .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+        	    .requestMatchers("/api/auth/login", 
+        	    		"/api/auth/register",
+        	    		"/swagger-ui/**",
+        	            "/swagger-ui.html",
+        	            "/v3/api-docs/**"
+        	    		).permitAll()
 
         	    // Products GET — for everyone
         	    .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()

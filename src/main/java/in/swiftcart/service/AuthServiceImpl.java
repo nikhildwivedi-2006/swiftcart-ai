@@ -1,6 +1,7 @@
 package in.swiftcart.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +13,8 @@ import in.swiftcart.dtoresponse.LoginResponseDTO;
 import in.swiftcart.dtoresponse.RegisterResponseDTO;
 import in.swiftcart.entity.Cart;
 import in.swiftcart.entity.User;
+import in.swiftcart.exception.AuthenticationException;
+import in.swiftcart.exception.DuplicateResourceException;
 import in.swiftcart.repository.CartRepository;
 import in.swiftcart.repository.UserRepository;
 import in.swiftcart.security.CustomUserDetails;
@@ -31,33 +34,36 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
 
-        // verification of email & password
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequestDTO.getEmail(),
-                        loginRequestDTO.getPassword()
-                )
-        );
+        try {
 
-        // authentication.getPrincipal() return the login user
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequestDTO.getEmail(),
+                            loginRequestDTO.getPassword()
+                    )
+            );
 
-        // generate jwt token from user details
-        String token = jwtService.generateToken(userDetails);
+            CustomUserDetails userDetails =
+                    (CustomUserDetails) authentication.getPrincipal();
 
-        // send the token to the client or frontend
-        User user = userRepository.findByEmail(loginRequestDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            String token = jwtService.generateToken(userDetails);
 
-        return LoginResponseDTO.builder()
-                .token(token)
-                .id(user.getId())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .address(user.getAddress())
-                .role(user.getRole().name())
-                .build();
+            User user = userRepository.findByEmail(loginRequestDTO.getEmail())
+                    .orElseThrow(() -> new AuthenticationException("User not found"));
+
+            return LoginResponseDTO.builder()
+                    .token(token)
+                    .id(user.getId())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .address(user.getAddress())
+                    .role(user.getRole().name())
+                    .build();
+
+        } catch (BadCredentialsException ex) {
+            throw new AuthenticationException("Invalid email or password");
+        }
     }
 
     @Override
@@ -65,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
 
         // check if email already exists
         if (userRepository.existsByEmail(registerRequestDTO.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new DuplicateResourceException("Email already registered");
         }
 
         // build user entity

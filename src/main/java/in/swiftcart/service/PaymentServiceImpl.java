@@ -15,6 +15,7 @@ import in.swiftcart.entity.Order;
 import in.swiftcart.enums.PaymentMethod;
 import in.swiftcart.enums.PaymentStatus;
 import in.swiftcart.exception.InvalidOperationException;
+import in.swiftcart.exception.PaymentException;
 import in.swiftcart.exception.ResourceNotFoundException;
 import in.swiftcart.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -69,8 +70,7 @@ public class PaymentServiceImpl implements PaymentService {
     	                .build();
 
     	    }catch (RazorpayException e) {
-    	        e.printStackTrace();
-    	        throw new RuntimeException(e.getMessage());
+    	        throw new PaymentException("Failed to create Razorpay payment order", e);
     	    }
           
     }
@@ -103,7 +103,7 @@ public class PaymentServiceImpl implements PaymentService {
             order.setPaymentStatus(PaymentStatus.FAILED);
             orderRepository.save(order);
 
-            throw new RuntimeException("Payment verification failed", e);
+            throw new PaymentException("Payment verification failed", e);
         }
     }
 }

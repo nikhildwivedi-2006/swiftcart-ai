@@ -21,6 +21,8 @@ import in.swiftcart.dtoresponse.OrderResponseDTO;
 import in.swiftcart.dtoresponse.PageResponseDTO;
 import in.swiftcart.enums.OrderStatus;
 import in.swiftcart.service.OrderService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -28,87 +30,79 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Orders", description = "APIs for order management")
 public class OrderController {
 
-    private final OrderService orderService;
+	private final OrderService orderService;
 
-    // Place a new order
-    @PostMapping
-    public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> placeOrder(
-            @Valid @RequestBody PlaceOrderRequestDTO placeOrderRequestDTO) {
-        OrderResponseDTO order = orderService.placeOrder(placeOrderRequestDTO);
-        return new ResponseEntity<>(
-                ApiResponseDTO.success("Order placed successfully", order),
-                HttpStatus.CREATED);
-    }
+	// Place a new order
+	@PostMapping
+	public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> placeOrder(
+			@Valid @RequestBody PlaceOrderRequestDTO placeOrderRequestDTO) {
+		OrderResponseDTO order = orderService.placeOrder(placeOrderRequestDTO);
+		return new ResponseEntity<>(ApiResponseDTO.success("Order placed successfully", order), HttpStatus.CREATED);
+	}
 
-     //Get order by ID
-    @GetMapping("/{orderId}")
-    public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> getOrderById(@PathVariable Long orderId) {
-        OrderResponseDTO order = orderService.getOrderById(orderId);
-        return ResponseEntity.ok(ApiResponseDTO.success(order));
-    }
+	// Get order by ID
+	@GetMapping("/{orderId}")
+	public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> getOrderById(@PathVariable Long orderId) {
+		OrderResponseDTO order = orderService.getOrderById(orderId);
+		return ResponseEntity.ok(ApiResponseDTO.success(order));
+	}
 
-    //Get order by order number
-    @GetMapping("/number/{orderNumber}")
-    public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> getOrderByOrderNumber(
-            @PathVariable String orderNumber) {
-        OrderResponseDTO order = orderService.getOrderByOrderNumber(orderNumber);
-        return ResponseEntity.ok(ApiResponseDTO.success(order));
-    }
+	// Get order by order number
+	@GetMapping("/number/{orderNumber}")
+	public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> getOrderByOrderNumber(@PathVariable String orderNumber) {
+		OrderResponseDTO order = orderService.getOrderByOrderNumber(orderNumber);
+		return ResponseEntity.ok(ApiResponseDTO.success(order));
+	}
 
-    // GET /api/orders/user/{userId}
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponseDTO<List<OrderResponseDTO>>> getOrdersByUserId(
-            @PathVariable Long userId) {
-        List<OrderResponseDTO> orders = orderService.getOrdersByUserId(userId);
-        return ResponseEntity.ok(ApiResponseDTO.success("Fetched " + orders.size() + " orders", orders));
-    }
+	// GET /api/orders/user/{userId}
+	@GetMapping("/user/{userId}")
+	public ResponseEntity<ApiResponseDTO<List<OrderResponseDTO>>> getOrdersByUserId(@PathVariable Long userId) {
+		List<OrderResponseDTO> orders = orderService.getOrdersByUserId(userId);
+		return ResponseEntity.ok(ApiResponseDTO.success("Fetched " + orders.size() + " orders", orders));
+	}
 
-    //Get all orders (paginated)
-    @GetMapping
-    public ResponseEntity<ApiResponseDTO<PageResponseDTO<OrderResponseDTO>>> getAllOrdersPaginated(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "orderDate") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
-        PageResponseDTO<OrderResponseDTO> orders = orderService.getAllOrdersPaginated(page, size, sortBy, sortDir);
-        return ResponseEntity.ok(ApiResponseDTO.success(orders));
-    }
+	// Get all orders (paginated)
+	@GetMapping
+	public ResponseEntity<ApiResponseDTO<PageResponseDTO<OrderResponseDTO>>> getAllOrdersPaginated(
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size,
+			@RequestParam(defaultValue = "orderDate") String sortBy,
+			@RequestParam(defaultValue = "desc") String sortDir) {
+		PageResponseDTO<OrderResponseDTO> orders = orderService.getAllOrdersPaginated(page, size, sortBy, sortDir);
+		return ResponseEntity.ok(ApiResponseDTO.success(orders));
+	}
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponseDTO<List<OrderResponseDTO>>> getOrdersByStatus(
-            @PathVariable OrderStatus status) {
+	@GetMapping("/status/{status}")
+	public ResponseEntity<ApiResponseDTO<List<OrderResponseDTO>>> getOrdersByStatus(@PathVariable OrderStatus status) {
 
-        List<OrderResponseDTO> orders = orderService.getOrdersByStatus(status);
-        return ResponseEntity.ok(ApiResponseDTO.success(orders));
-    }
+		List<OrderResponseDTO> orders = orderService.getOrdersByStatus(status);
+		return ResponseEntity.ok(ApiResponseDTO.success(orders));
+	}
 
-    //Update order status
-    @PatchMapping("/{orderId}/status")
-    public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> updateOrderStatus(
-            @PathVariable Long orderId,
-            @Valid @RequestBody UpdateOrderStatusRequestDTO updateOrderStatusRequestDTO) {
-        OrderResponseDTO order = orderService.updateOrderStatus(orderId, updateOrderStatusRequestDTO);
-        return ResponseEntity.ok(ApiResponseDTO.success("Order status updated successfully", order));
-    }
+	// Update order status
+	@PatchMapping("/{orderId}/status")
+	public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> updateOrderStatus(@PathVariable Long orderId,
+			@Valid @RequestBody UpdateOrderStatusRequestDTO updateOrderStatusRequestDTO) {
+		OrderResponseDTO order = orderService.updateOrderStatus(orderId, updateOrderStatusRequestDTO);
+		return ResponseEntity.ok(ApiResponseDTO.success("Order status updated successfully", order));
+	}
 
-    //Cancel order
-    @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> cancelOrder(
-            @PathVariable Long orderId,
-            @RequestParam(required = false, defaultValue = "Customer requested cancellation") String reason) {
-        OrderResponseDTO order = orderService.cancelOrder(orderId, reason);
-        return ResponseEntity.ok(ApiResponseDTO.success("Order cancelled successfully", order));
-    }
+	// Cancel order
+	@PostMapping("/{orderId}/cancel")
+	public ResponseEntity<ApiResponseDTO<OrderResponseDTO>> cancelOrder(@PathVariable Long orderId,
+			@RequestParam(required = false, defaultValue = "Customer requested cancellation") String reason) {
+		OrderResponseDTO order = orderService.cancelOrder(orderId, reason);
+		return ResponseEntity.ok(ApiResponseDTO.success("Order cancelled successfully", order));
+	}
 
-    // Search orders
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponseDTO<PageResponseDTO<OrderResponseDTO>>> searchOrders(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        PageResponseDTO<OrderResponseDTO> orders = orderService.searchOrders(keyword, page, size);
-        return ResponseEntity.ok(ApiResponseDTO.success(orders));
-    }
+	// Search orders
+	@GetMapping("/search")
+	public ResponseEntity<ApiResponseDTO<PageResponseDTO<OrderResponseDTO>>> searchOrders(@RequestParam String keyword,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+		PageResponseDTO<OrderResponseDTO> orders = orderService.searchOrders(keyword, page, size);
+		return ResponseEntity.ok(ApiResponseDTO.success(orders));
+	}
 }

@@ -5,12 +5,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import in.swiftcart.ai.loader.PromptLoader;
+import in.swiftcart.exception.InvalidOperationException;
 
 @Service
 public class AIServiceImpl implements AIService {
 
-	@Value("${spring.ai.google.genai.api-key}")
-    private String apiKey;
+	
 	
     private final ChatClient chatClient;
     private final PromptLoader promptLoader;
@@ -78,8 +78,7 @@ public class AIServiceImpl implements AIService {
                     .content();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+            throw new InvalidOperationException("AI service is currently unavailable");
         }
     }
 }

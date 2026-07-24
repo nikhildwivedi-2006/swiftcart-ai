@@ -175,4 +175,38 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 	
+	//Authentication exception
+	@ExceptionHandler(AuthenticationException.class)
+	public ResponseEntity<ErrorResponse> handleAuthenticationException(
+	        AuthenticationException ex,
+	        HttpServletRequest request) {
+
+	    ErrorResponse error = ErrorResponse.builder()
+	            .timeStamp(LocalDateTime.now())
+	            .status(HttpStatus.UNAUTHORIZED.value())
+	            .error("Authentication Failed")
+	            .message(ex.getMessage())
+	            .path(request.getRequestURI())
+	            .build();
+
+	    return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+	}
+	
+	// payment Exception
+	@ExceptionHandler(PaymentException.class)
+	public ResponseEntity<ErrorResponse> handlePaymentException(
+	        PaymentException ex,
+	        HttpServletRequest request) {
+
+	    ErrorResponse error = ErrorResponse.builder()
+	            .timeStamp(LocalDateTime.now())
+	            .status(HttpStatus.BAD_REQUEST.value())
+	            .error("Payment Error")
+	            .message(ex.getMessage())
+	            .path(request.getRequestURI())
+	            .build();
+
+	    return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+	}
+	
 }

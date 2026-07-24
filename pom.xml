@@ -155,6 +155,12 @@
     <artifactId>spring-ai-starter-model-google-genai</artifactId>
 </dependency>
 		
+		<!-- swagger dependecy-->
+		<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.8.13</version>
+</dependency>
 		
 	</dependencies>
 
