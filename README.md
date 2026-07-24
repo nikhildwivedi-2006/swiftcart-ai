@@ -1,6 +1,16 @@
 # 🛒 SwiftCart AI - Full Stack E-Commerce Platform
+![Java](https://img.shields.io/badge/Java-17-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0-green)
+![Spring AI](https://img.shields.io/badge/Spring%20AI-Enabled-brightgreen)
+![React](https://img.shields.io/badge/React-Vite-blue)
+![MySQL](https://img.shields.io/badge/Database-MySQL-blue)
+![Docker](https://img.shields.io/badge/Docker-Containerization-blue)
+![JWT](https://img.shields.io/badge/Security-JWT-red)
+![Razorpay](https://img.shields.io/badge/Payment-Razorpay-purple)
+![Maven](https://img.shields.io/badge/Build-Maven-C71A36)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-SwiftCart AI is a production-oriented full-stack e-commerce application built using **Spring Boot and React**.  
+SwiftCart AI is a full-stack e-commerce application designed with production-level architecture and modern development practices. Built using **Spring Boot and React**.  
 The project follows industry-standard backend architecture with layered design, DTO pattern, service abstraction, reusable helper methods, entity mapping, and secure API development.
 
 The application includes secure authentication, product management, cart & order workflow, payment integration, and AI-powered customer support using Spring AI.
@@ -50,6 +60,27 @@ The application includes secure authentication, product management, cart & order
 - Integrated Spring AI
 - Gemini API powered chatbot
 - AI based customer query handling
+
+### 📚 API Documentation
+
+API documentation is available using Swagger OpenAPI.
+
+Features:
+- Interactive API testing
+- JWT Bearer authentication support
+- Request/Response schema documentation
+
+Swagger URL: http://localhost:8082/swagger-ui/index.html
+
+### 🚀 Deployment
+
+Deployment using Docker and AWS is currently in progress.
+
+Planned deployment:
+- Docker containerization
+- AWS EC2 deployment
+- Environment variable based configuration
+- Cloud database setup
 
 ---
 
@@ -107,6 +138,41 @@ The application includes secure authentication, product management, cart & order
 - Postman
 - AWS (Deployment in progress)
 
+
+# 🏗️ Architecture
+
+SwiftCart follows a layered backend architecture to maintain clean code separation, scalability, and maintainability.
+```
+  Client (React Frontend)
+        ↓
+  REST API Layer (Controllers)
+        ↓
+  Service Layer (Business Logic)
+        ↓
+  Repository Layer (Spring Data JPA)
+        ↓
+  Database (MySQL)
+```
+### Additional Components
+
+- **Spring Security + JWT Filter**
+  - Handles authentication and authorization
+
+- **DTO Layer**
+  - Separates API request/response models from database entities
+
+- **Global Exception Handler**
+  - Provides consistent error responses across APIs
+
+- **Spring AI Integration**
+  - Provides AI-powered customer support assistant
+
+- **Payment Service**
+  - Handles Razorpay payment creation and verification
+
+---
+
+# 📂 Project Structure
 ---
 
 # 📂 Project Structure
