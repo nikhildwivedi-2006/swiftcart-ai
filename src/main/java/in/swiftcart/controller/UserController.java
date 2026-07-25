@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/users") // common routes for all apis
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // for conecting the frontend part react
+
 @Tag(name = "Users", description = "APIs for user management")
 public class UserController {
 

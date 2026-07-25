@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+
 @Tag(name = "Shopping Cart", description = "APIs for shopping cart operations")
 public class CartController {
 

@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Orders", description = "APIs for order management")
 public class OrderController {
