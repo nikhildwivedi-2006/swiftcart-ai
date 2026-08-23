@@ -34,11 +34,3 @@ build/
 
 
 .env
-# Frontend
-**/node_modules/
-**/dist/
-
-# Local files
-.metadata/
-security code.docx
-*.log
