@@ -35,8 +35,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push Docker image
+      - name: Tag Docker image
         run: docker tag swiftcart-backend:latest nikhilcicd/swiftcart-backend:latest
 
       - name: Push image to Docker Hub
         run: docker push nikhilcicd/swiftcart-backend:latest
+
+      - name: Build frontend Docker image
+        run: docker build -t swiftcart-frontend:latest ./frontend
+
+      - name: Tag frontend Docker image
+        run: docker tag swiftcart-frontend:latest nikhilcicd/swiftcart-frontend:latest
+
+      - name: Push frontend image to Docker Hub
+        run: docker push nikhilcicd/swiftcart-frontend:latest
