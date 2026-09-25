@@ -28,3 +28,15 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t swiftcart-backend:latest ./SwiftCartApp
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Docker image
+        run: docker tag swiftcart-backend:latest nikhilcicd/swiftcart-backend:latest
+
+      - name: Push image to Docker Hub
+        run: docker push nikhilcicd/swiftcart-backend:latest
