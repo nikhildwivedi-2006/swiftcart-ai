@@ -20,8 +20,11 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Build Spring Boot application
         working-directory: SwiftCartApp
         run: ./mvnw clean package -DskipTests
+
+      - name: Build Docker image
+        run: docker build -t swiftcart-backend:latest ./SwiftCartApp
