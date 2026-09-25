@@ -10,18 +10,16 @@ import in.swiftcart.exception.InvalidOperationException;
 @Service
 public class AIServiceImpl implements AIService {
 
-	
-	
     private final ChatClient chatClient;
     private final PromptLoader promptLoader;
 
     public AIServiceImpl(ChatClient chatClient,
-                         PromptLoader promptLoader) {
+            PromptLoader promptLoader) {
 
         this.chatClient = chatClient;
         this.promptLoader = promptLoader;
     }
-    
+
     private String getPromptFile(String message) {
 
         String msg = message.trim().toLowerCase();
@@ -78,6 +76,7 @@ public class AIServiceImpl implements AIService {
                     .content();
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new InvalidOperationException("AI service is currently unavailable");
         }
     }

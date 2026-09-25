@@ -39,7 +39,7 @@ export default function Checkout() {
       toast.error("Please select a user first");
       return;
     }
-
+    if (placing) return;
     setPlacing(true);
 
     try {
@@ -53,9 +53,8 @@ export default function Checkout() {
       if (paymentMethod === "COD") {
         toast.success("Order placed successfully!");
 
-        await loadCart();
-
         navigate(`/orders/${order.id}`);
+        await loadCart();
 
         return;
       }
@@ -89,9 +88,8 @@ export default function Checkout() {
 
           toast.success("Payment successful!");
 
-          await loadCart();
-
           navigate(`/orders/${order.id}`);
+          await loadCart();
         },
 
         prefill: {

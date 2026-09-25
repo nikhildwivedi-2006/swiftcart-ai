@@ -38,3 +38,5 @@ services:
 
 volumes:
   mysql-data:
+    external: true
+    name: swiftcartapp_mysql-data

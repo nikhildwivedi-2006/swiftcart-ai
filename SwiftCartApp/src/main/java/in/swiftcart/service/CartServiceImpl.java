@@ -148,12 +148,14 @@ public class CartServiceImpl implements CartService {
 
 		        } else {
 		            CartItem item = CartItem.builder()
-		                    .product(product)
+		            		.cart(cart)
+		            		.product(product)
 		                    .quantity(addToCartRequestDTO.getQuantity())
 		                    .unitPrice(product.getPrice())
 		                    .build();
 		            item.calculateSubTotal();
 		            cart.addCartItem(item); // Cascade handles save
+		            cartItemRepository.save(item);
 		        }
 
 		        cart.recalculateTotals();

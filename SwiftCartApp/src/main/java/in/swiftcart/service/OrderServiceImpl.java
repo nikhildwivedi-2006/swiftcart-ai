@@ -23,6 +23,7 @@ import in.swiftcart.entity.OrderItem;
 import in.swiftcart.entity.Product;
 import in.swiftcart.entity.User;
 import in.swiftcart.enums.OrderStatus;
+import in.swiftcart.enums.PaymentMethod;
 import in.swiftcart.enums.PaymentStatus;
 import in.swiftcart.exception.EmptyCartException;
 import in.swiftcart.exception.InsufficientStockException;
@@ -41,291 +42,286 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
-    private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
-    private final CartRepository cartRepository;
-    private final UserRepository userRepository;
-    private final ProductRepository productRepository;
+	private final OrderRepository orderRepository;
+	private final OrderItemRepository orderItemRepository;
+	private final CartRepository cartRepository;
+	private final UserRepository userRepository;
+	private final ProductRepository productRepository;
 
-    @Override
-    public OrderResponseDTO placeOrder(PlaceOrderRequestDTO placeOrderRequestDTO) {
-        // Fetch user
-        Optional<User> userOptional = userRepository.findById(placeOrderRequestDTO.getUserId());
-        if (!userOptional.isPresent()) {
-            throw new ResourceNotFoundException("User", "id", placeOrderRequestDTO.getUserId());
-        }
-        User user = userOptional.get();
+	@Override
+	public OrderResponseDTO placeOrder(PlaceOrderRequestDTO placeOrderRequestDTO) {
+		// Fetch user
+		Optional<User> userOptional = userRepository.findById(placeOrderRequestDTO.getUserId());
+		if (!userOptional.isPresent()) {
+			throw new ResourceNotFoundException("User", "id", placeOrderRequestDTO.getUserId());
+		}
+		User user = userOptional.get();
 
-        // Fetch cart with items
-        Optional<Cart> cartOptional = cartRepository.findByUserIdWithItems(placeOrderRequestDTO.getUserId());
-        if (!cartOptional.isPresent()) {
-            throw new ResourceNotFoundException("Cart", "userId", placeOrderRequestDTO.getUserId());
-        }
-        Cart cart = cartOptional.get();
+		// Fetch cart with items
+		Optional<Cart> cartOptional = cartRepository.findByUserIdWithItems(placeOrderRequestDTO.getUserId());
+		if (!cartOptional.isPresent()) {
+			throw new ResourceNotFoundException("Cart", "userId", placeOrderRequestDTO.getUserId());
+		}
+		Cart cart = cartOptional.get();
 
-        // Validate cart is not empty
-        if (cart.getCartItems().isEmpty()) {
-            throw new EmptyCartException("Cannot place order with an empty cart");
-        }
+		// Validate cart is not empty
+		if (cart.getCartItems().isEmpty()) {
+			throw new EmptyCartException("Cannot place order with an empty cart");
+		}
 
-        // Copy cart items to avoid concurrent modification issues
-        List<CartItem> cartItemsCopy = new ArrayList<>(cart.getCartItems());
+		// Copy cart items to avoid concurrent modification issues
+		List<CartItem> cartItemsCopy = new ArrayList<>(cart.getCartItems());
 
-        // Validate stock availability for all items
-        for (CartItem cartItem : cartItemsCopy) {
-            Product product = cartItem.getProduct();
-            if (!product.getIsAvailable()) {
-                throw new InsufficientStockException(product.getName() + " is no longer available");
-            }
-            if (product.getStockQuantity() < cartItem.getQuantity()) {
-                throw new InsufficientStockException(
-                        "Insufficient stock for " + product.getName() +
-                                ". Available: " + product.getStockQuantity() +
-                                ", Requested: " + cartItem.getQuantity());
-            }
-        }
+		// Validate stock availability for all items
+		for (CartItem cartItem : cartItemsCopy) {
+			Product product = cartItem.getProduct();
+			if (!product.getIsAvailable()) {
+				throw new InsufficientStockException(product.getName() + " is no longer available");
+			}
+			if (product.getStockQuantity() < cartItem.getQuantity()) {
+				throw new InsufficientStockException("Insufficient stock for " + product.getName() + ". Available: "
+						+ product.getStockQuantity() + ", Requested: " + cartItem.getQuantity());
+			}
+		}
 
-        // Calculate total amount as the sum of all cart item subtotals
-        double totalAmount = 0.0;
-        for (CartItem cartItem : cartItemsCopy) {
-            totalAmount = totalAmount + cartItem.getSubTotal();
-        }
+		// Calculate total amount as the sum of all cart item subtotals
+		double totalAmount = 0.0;
+		for (CartItem cartItem : cartItemsCopy) {
+			totalAmount = totalAmount + cartItem.getSubTotal();
+		}
 
-     // Create order
-        Order order = Order.builder()
-                .user(user)
-                .totalAmmount(totalAmount)
-                .notes(placeOrderRequestDTO.getNotes())
-                .status(OrderStatus.PENDING)
-                .paymentMethod(placeOrderRequestDTO.getPaymentMethod())
-                .paymentStatus(PaymentStatus.PENDING)
-                .build();
+		// Create order
+//		Order order = Order.builder().user(user).totalAmmount(totalAmount).notes(placeOrderRequestDTO.getNotes())
+//				.status(OrderStatus.PENDING).paymentMethod(placeOrderRequestDTO.getPaymentMethod())
+//				.paymentStatus(PaymentStatus.PENDING).build();
+		
+		
+		Order order = Order.builder()
+		        .user(user)
+		        .totalAmmount(totalAmount)
+		        .notes(placeOrderRequestDTO.getNotes())
+		        .status(
+		            placeOrderRequestDTO.getPaymentMethod() == PaymentMethod.COD
+		                ? OrderStatus.CONFIRMED
+		                : OrderStatus.PENDING
+		        )
+		        .paymentMethod(placeOrderRequestDTO.getPaymentMethod())
+		        .paymentStatus(
+		            placeOrderRequestDTO.getPaymentMethod() == PaymentMethod.COD
+		                ? PaymentStatus.SUCCESS
+		                : PaymentStatus.PENDING
+		        )
+		        .build();
 
-        Order savedOrder = orderRepository.save(order);
+		Order savedOrder = orderRepository.save(order);
 
-        // Create order items from cart items
-        List<OrderItem> orderItems = new ArrayList<>();
-        for (CartItem cartItem : cartItemsCopy) {
-            OrderItem orderItem = OrderItem.fromCartItem(cartItem);
-            orderItem.setOrder(savedOrder);
-            orderItems.add(orderItem);
+		// Create order items from cart items
+		List<OrderItem> orderItems = new ArrayList<>();
+		for (CartItem cartItem : cartItemsCopy) {
+			OrderItem orderItem = OrderItem.fromCartItem(cartItem);
+			orderItem.setOrder(savedOrder);
+			orderItems.add(orderItem);
 
-            // Decrease product stock
-            productRepository.decreaseStock(cartItem.getProduct().getId(), cartItem.getQuantity());
-        }
-        orderItemRepository.saveAll(orderItems);
-        savedOrder.setOrderItems(orderItems);
+			
+		}
+		orderItemRepository.saveAll(orderItems);
+		savedOrder.setOrderItems(orderItems);
 
-        // Clear the cart after order is placed
-        cart.getCartItems().clear();
-        cart.setTotalItems(0);
-        cart.setTotalAmmount(0.0);
-        cartRepository.save(cart);
+		
+		if (placeOrderRequestDTO.getPaymentMethod() == PaymentMethod.COD) {
 
-        return mapToOrderResponseDTO(savedOrder);
-    }
+		    for (CartItem cartItem : cartItemsCopy) {
+		        productRepository.decreaseStock(
+		                cartItem.getProduct().getId(),
+		                cartItem.getQuantity()
+		        );
+		    }
 
-    @Override
-    public OrderResponseDTO getOrderById(Long orderId) {
-        Optional<Order> orderOptional = orderRepository.findByIdWithItems(orderId);
-        if (orderOptional.isPresent()) {
-            return mapToOrderResponseDTO(orderOptional.get());
-        } else {
-            throw new ResourceNotFoundException("Order", "id", orderId);
-        }
-    }
+		    cart.clearCart();
+		    cartRepository.save(cart);
+		}
+		
 
-    @Override
-    public OrderResponseDTO getOrderByOrderNumber(String orderNumber) {
-        Optional<Order> orderOptional = orderRepository.findByOrderNumberWithItems(orderNumber);
-        if (orderOptional.isPresent()) {
-            return mapToOrderResponseDTO(orderOptional.get());
-        } else {
-            throw new ResourceNotFoundException("Order", "orderNumber", orderNumber);
-        }
-    }
+		return mapToOrderResponseDTO(savedOrder);
+	}
 
-    @Override
-    public List<OrderResponseDTO> getOrdersByUserId(Long userId) {
-        List<Order> orders = orderRepository.findByUserIdOrderByOrderDateDesc(userId);
-        List<OrderResponseDTO> responseList = new ArrayList<>();
-        for (Order order : orders) {
-            responseList.add(mapToOrderResponseDTO(order));
-        }
-        return responseList;
-    }
+	@Override
+	public OrderResponseDTO getOrderById(Long orderId) {
+		Optional<Order> orderOptional = orderRepository.findByIdWithItems(orderId);
+		if (orderOptional.isPresent()) {
+			return mapToOrderResponseDTO(orderOptional.get());
+		} else {
+			throw new ResourceNotFoundException("Order", "id", orderId);
+		}
+	}
 
-    @Override
-    public PageResponseDTO<OrderResponseDTO> getAllOrdersPaginated(int page, int size, String sortBy, String sortDir) {
-        Sort sort;
-        if (sortDir.equalsIgnoreCase("desc")) {
-            sort = Sort.by(sortBy).descending();
-        } else {
-            sort = Sort.by(sortBy).ascending();
-        }
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Order> orderPage = orderRepository.findAll(pageable);
-        return mapToPageResponse(orderPage);
-    }
+	@Override
+	public OrderResponseDTO getOrderByOrderNumber(String orderNumber) {
+		Optional<Order> orderOptional = orderRepository.findByOrderNumberWithItems(orderNumber);
+		if (orderOptional.isPresent()) {
+			return mapToOrderResponseDTO(orderOptional.get());
+		} else {
+			throw new ResourceNotFoundException("Order", "orderNumber", orderNumber);
+		}
+	}
 
-    @Override
-    public List<OrderResponseDTO> getOrdersByStatus(OrderStatus status) {
-        List<Order> orders = orderRepository.findByStatus(status);
+	@Override
+	public List<OrderResponseDTO> getOrdersByUserId(Long userId) {
+		List<Order> orders = orderRepository.findByUserIdOrderByOrderDateDesc(userId);
+		List<OrderResponseDTO> responseList = new ArrayList<>();
+		for (Order order : orders) {
+			responseList.add(mapToOrderResponseDTO(order));
+		}
+		return responseList;
+	}
 
-        List<OrderResponseDTO> responseList = new ArrayList<>();
-        for (Order order : orders) {
-            responseList.add(mapToOrderResponseDTO(order));
-        }
-        return responseList;
-    }
+	@Override
+	public PageResponseDTO<OrderResponseDTO> getAllOrdersPaginated(int page, int size, String sortBy, String sortDir) {
+		Sort sort;
+		if (sortDir.equalsIgnoreCase("desc")) {
+			sort = Sort.by(sortBy).descending();
+		} else {
+			sort = Sort.by(sortBy).ascending();
+		}
+		Pageable pageable = PageRequest.of(page, size, sort);
+		Page<Order> orderPage = orderRepository.findAll(pageable);
+		return mapToPageResponse(orderPage);
+	}
 
-    @Override
-    public OrderResponseDTO updateOrderStatus(Long orderId, UpdateOrderStatusRequestDTO updateOrderStatusRequestDTO) {
-        Order order = findOrderById(orderId);
+	@Override
+	public List<OrderResponseDTO> getOrdersByStatus(OrderStatus status) {
+		List<Order> orders = orderRepository.findByStatus(status);
 
-        OrderStatus newStatus = updateOrderStatusRequestDTO.getOrderStatus();
+		List<OrderResponseDTO> responseList = new ArrayList<>();
+		for (Order order : orders) {
+			responseList.add(mapToOrderResponseDTO(order));
+		}
+		return responseList;
+	}
 
-        validateStatusTransition(order.getStatus(), newStatus);
+	@Override
+	public OrderResponseDTO updateOrderStatus(Long orderId, UpdateOrderStatusRequestDTO updateOrderStatusRequestDTO) {
+		Order order = findOrderById(orderId);
 
-        order.setStatus(newStatus);
+		OrderStatus newStatus = updateOrderStatusRequestDTO.getOrderStatus();
 
-        if (newStatus == OrderStatus.CANCELLED) {
-            restoreStock(order);
-        }
+		validateStatusTransition(order.getStatus(), newStatus);
 
-        if (updateOrderStatusRequestDTO.getNotes() != null && !updateOrderStatusRequestDTO.getNotes().isEmpty()) {
-            String existingNotes = order.getNotes() != null ? order.getNotes() + "\n" : "";
-            order.setNotes(existingNotes + "[" + LocalDateTime.now() + "] " + updateOrderStatusRequestDTO.getNotes());
-        }
+		order.setStatus(newStatus);
 
-        Order updatedOrder = orderRepository.save(order);
-        return mapToOrderResponseDTO(updatedOrder);
-    }
+		if (newStatus == OrderStatus.CANCELLED) {
+			restoreStock(order);
+		}
 
-    @Override
-    public OrderResponseDTO cancelOrder(Long orderId, String reason) {
-        Order order = orderRepository.findByIdWithItems(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+		if (updateOrderStatusRequestDTO.getNotes() != null && !updateOrderStatusRequestDTO.getNotes().isEmpty()) {
+			String existingNotes = order.getNotes() != null ? order.getNotes() + "\n" : "";
+			order.setNotes(existingNotes + "[" + LocalDateTime.now() + "] " + updateOrderStatusRequestDTO.getNotes());
+		}
 
-        if (order.getStatus() != OrderStatus.CONFIRMED) {
-            throw new InvalidOperationException("Cannot cancel order with status: " + order.getStatus());
-        }
+		Order updatedOrder = orderRepository.save(order);
+		return mapToOrderResponseDTO(updatedOrder);
+	}
 
-        order.setStatus(OrderStatus.CANCELLED);
+	@Override
+	public OrderResponseDTO cancelOrder(Long orderId, String reason) {
+		Order order = orderRepository.findByIdWithItems(orderId)
+				.orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
-        String notes = order.getNotes() != null ? order.getNotes() + "\n" : "";
-        order.setNotes(notes +" Cancelled: " + reason);
+		if (order.getStatus() != OrderStatus.CONFIRMED) {
+			throw new InvalidOperationException("Cannot cancel order with status: " + order.getStatus());
+		}
 
-        restoreStock(order);
+		order.setStatus(OrderStatus.CANCELLED);
 
-        Order cancelledOrder = orderRepository.save(order);
-        return mapToOrderResponseDTO(cancelledOrder);
-    }
+		String notes = order.getNotes() != null ? order.getNotes() + "\n" : "";
+		order.setNotes(notes + " Cancelled: " + reason);
 
-    @Override
-    public PageResponseDTO<OrderResponseDTO> searchOrders(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Order> orderPage = orderRepository.searchOrders(keyword, pageable);
-        return mapToPageResponse(orderPage);
-    }
+		restoreStock(order);
 
-    // Helper: find order by ID
-    private Order findOrderById(Long orderId) {
-        Optional<Order> orderOptional = orderRepository.findById(orderId);
-        if (orderOptional.isPresent()) {
-            return orderOptional.get();
-        } else {
-            throw new ResourceNotFoundException("Order", "id", orderId);
-        }
-    }
+		Order cancelledOrder = orderRepository.save(order);
+		return mapToOrderResponseDTO(cancelledOrder);
+	}
 
-    // Helper: validate status transition
-    private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+	@Override
+	public PageResponseDTO<OrderResponseDTO> searchOrders(String keyword, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<Order> orderPage = orderRepository.searchOrders(keyword, pageable);
+		return mapToPageResponse(orderPage);
+	}
 
-        if (currentStatus == OrderStatus.CONFIRMED) {
+	// Helper: find order by ID
+	private Order findOrderById(Long orderId) {
+		Optional<Order> orderOptional = orderRepository.findById(orderId);
+		if (orderOptional.isPresent()) {
+			return orderOptional.get();
+		} else {
+			throw new ResourceNotFoundException("Order", "id", orderId);
+		}
+	}
 
-            if (newStatus != OrderStatus.CANCELLED) {
-                throw new InvalidOperationException(
-                        "Cannot transition from CONFIRMED to " + newStatus);
-            }
+	// Helper: validate status transition
+	private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
 
-        } else if (currentStatus == OrderStatus.CANCELLED) {
+		if (currentStatus == OrderStatus.CONFIRMED) {
 
-            throw new InvalidOperationException(
-                    "Cannot change status of " + currentStatus + " order");
-        }
-    }
+			if (newStatus != OrderStatus.CANCELLED) {
+				throw new InvalidOperationException("Cannot transition from CONFIRMED to " + newStatus);
+			}
 
-    // Helper: restore stock when order is cancelled
-    private void restoreStock(Order order) {
-        for (OrderItem orderItem : order.getOrderItems()) {
-            Product product = orderItem.getProduct();
-            if (product != null) {
-                product.setStockQuantity(product.getStockQuantity() + orderItem.getQuantity());
-            }
-        }
-    }
+		} else if (currentStatus == OrderStatus.CANCELLED) {
 
-    // Helper: map Order to OrderResponseDTO
-    private OrderResponseDTO mapToOrderResponseDTO(Order order) {
-        List<OrderItemResponseDTO> items = new ArrayList<>();
-        for (OrderItem orderItem : order.getOrderItems()) {
-            items.add(mapToOrderItemResponseDTO(orderItem));
-        }
+			throw new InvalidOperationException("Cannot change status of " + currentStatus + " order");
+		}
+	}
 
-        int totalItems = 0;
-        for (OrderItem orderItem : order.getOrderItems()) {
-            totalItems = totalItems + orderItem.getQuantity();
-        }
+	// Helper: restore stock when order is cancelled
+	private void restoreStock(Order order) {
+		for (OrderItem orderItem : order.getOrderItems()) {
+			Product product = orderItem.getProduct();
+			if (product != null) {
+				product.setStockQuantity(product.getStockQuantity() + orderItem.getQuantity());
+			}
+		}
+	}
 
-        return OrderResponseDTO.builder()
-                .id(order.getId())
-                .orderNumber(order.getOrderNumber())
-                .userId(order.getUser().getId())
-                .userName(order.getUser().getFullName())
-                .userEmail(order.getUser().getEmail())
-                .items(items)
-                .totalItems(totalItems)
-                .totalAmount(order.getTotalAmmount())
-                .status(order.getStatus().name())
-                .notes(order.getNotes())
-                .orderDate(order.getOrderDate())
-                .build();
-    }
+	// Helper: map Order to OrderResponseDTO
+	private OrderResponseDTO mapToOrderResponseDTO(Order order) {
+		List<OrderItemResponseDTO> items = new ArrayList<>();
+		for (OrderItem orderItem : order.getOrderItems()) {
+			items.add(mapToOrderItemResponseDTO(orderItem));
+		}
 
-    // Helper: map OrderItem to OrderItemResponseDTO
-    private OrderItemResponseDTO mapToOrderItemResponseDTO(OrderItem orderItem) {
-        return OrderItemResponseDTO.builder()
-                .id(orderItem.getId())
-                .productId(orderItem.getProduct().getId())
-                .productName(orderItem.getProductName())
-                .productSku(orderItem.getProductSku())
-                .productImage(orderItem.getProduct().getImageUrl())
-                .quantity(orderItem.getQuantity())
-                .unitPrice(orderItem.getUnitPrice())
-                .subtotal(orderItem.getSubTotal())
-                .build();
-    }
+		int totalItems = 0;
+		for (OrderItem orderItem : order.getOrderItems()) {
+			totalItems = totalItems + orderItem.getQuantity();
+		}
 
-    // Helper: map Page to PageResponseDTO
-    private PageResponseDTO<OrderResponseDTO> mapToPageResponse(Page<Order> orderPage) {
-        List<OrderResponseDTO> orders = new ArrayList<>();
-        for (Order order : orderPage.getContent()) {
-            orders.add(mapToOrderResponseDTO(order));
-        }
+		return OrderResponseDTO.builder().id(order.getId()).orderNumber(order.getOrderNumber())
+				.userId(order.getUser().getId()).userName(order.getUser().getFullName())
+				.userEmail(order.getUser().getEmail()).items(items).totalItems(totalItems)
+				.totalAmount(order.getTotalAmmount()).status(order.getStatus().name()).notes(order.getNotes())
+				.orderDate(order.getOrderDate()).build();
+	}
 
-        return PageResponseDTO.<OrderResponseDTO>builder()
-                .content(orders)
-                .pageNumber(orderPage.getNumber())
-                .pageSize(orderPage.getSize())
-                .totalElements(orderPage.getTotalElements())
-                .totalPages(orderPage.getTotalPages())
-                .first(orderPage.isFirst())
-                .last(orderPage.isLast())
-                .hasNext(orderPage.hasNext())
-                .hasPrevious(orderPage.hasPrevious())
-                .build();
-    }
+	// Helper: map OrderItem to OrderItemResponseDTO
+	private OrderItemResponseDTO mapToOrderItemResponseDTO(OrderItem orderItem) {
+		return OrderItemResponseDTO.builder().id(orderItem.getId()).productId(orderItem.getProduct().getId())
+				.productName(orderItem.getProductName()).productSku(orderItem.getProductSku())
+				.productImage(orderItem.getProduct().getImageUrl()).quantity(orderItem.getQuantity())
+				.unitPrice(orderItem.getUnitPrice()).subtotal(orderItem.getSubTotal()).build();
+	}
 
-	
+	// Helper: map Page to PageResponseDTO
+	private PageResponseDTO<OrderResponseDTO> mapToPageResponse(Page<Order> orderPage) {
+		List<OrderResponseDTO> orders = new ArrayList<>();
+		for (Order order : orderPage.getContent()) {
+			orders.add(mapToOrderResponseDTO(order));
+		}
+
+		return PageResponseDTO.<OrderResponseDTO>builder().content(orders).pageNumber(orderPage.getNumber())
+				.pageSize(orderPage.getSize()).totalElements(orderPage.getTotalElements())
+				.totalPages(orderPage.getTotalPages()).first(orderPage.isFirst()).last(orderPage.isLast())
+				.hasNext(orderPage.hasNext()).hasPrevious(orderPage.hasPrevious()).build();
+	}
+
 }

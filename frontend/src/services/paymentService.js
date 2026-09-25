@@ -1,12 +1,12 @@
-import axios from "axios";
+import api from "./api"; 
 
-const API = "/api/payments";
+const API = "/payments";
 
 const paymentService = {
 
     createPaymentOrder: async(orderId)=>{
 
-        const response = await axios.post(
+        const response = await api.post(
             `${API}/create-order`,
             {
                 orderId: orderId
@@ -19,7 +19,7 @@ const paymentService = {
 
     verifyPayment: async(data)=>{
 
-        const response = await axios.post(
+        const response = await api.post(
             `${API}/verify`,
             data
         );

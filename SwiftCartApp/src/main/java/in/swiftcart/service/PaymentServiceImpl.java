@@ -11,13 +11,18 @@ import com.razorpay.Utils;
 import in.swiftcart.dtorequest.CreatePaymentRequestDTO;
 import in.swiftcart.dtorequest.VerifyPaymentRequestDTO;
 import in.swiftcart.dtoresponse.CreatePaymentResponseDTO;
+import in.swiftcart.entity.Cart;
 import in.swiftcart.entity.Order;
+import in.swiftcart.entity.OrderItem;
+import in.swiftcart.enums.OrderStatus;
 import in.swiftcart.enums.PaymentMethod;
 import in.swiftcart.enums.PaymentStatus;
 import in.swiftcart.exception.InvalidOperationException;
 import in.swiftcart.exception.PaymentException;
 import in.swiftcart.exception.ResourceNotFoundException;
+import in.swiftcart.repository.CartRepository;
 import in.swiftcart.repository.OrderRepository;
+import in.swiftcart.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +33,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final OrderRepository orderRepository;
     private final RazorpayClient razorpayClient;
+    
+    private final CartRepository cartRepository;
+    private final ProductRepository productRepository;
     
     @Value("${razorpay.key.id}")
     private String keyId;
@@ -79,10 +87,13 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String verifyPayment(VerifyPaymentRequestDTO request) {
 
-        Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Order", "id", request.getOrderId()));
-
+    	Order order = orderRepository.findByIdWithItems(request.getOrderId())
+    	        .orElseThrow(() ->
+    	                new ResourceNotFoundException(
+    	                        "Order",
+    	                        "id",
+    	                        request.getOrderId()
+    	                ));
         try {
             JSONObject options = new JSONObject();
             options.put("razorpay_order_id", request.getRazorpayOrderId());
@@ -94,6 +105,28 @@ public class PaymentServiceImpl implements PaymentService {
             order.setPaymentStatus(PaymentStatus.SUCCESS);
             order.setRazorpayPaymentId(request.getRazorpayPaymentId());
             order.setRazorpaySignature(request.getRazorpaySignature());
+
+            orderRepository.save(order);
+            
+            order.setStatus(OrderStatus.CONFIRMED);
+
+            for (OrderItem orderItem : order.getOrderItems()) {
+                productRepository.decreaseStock(
+                        orderItem.getProduct().getId(),
+                        orderItem.getQuantity()
+                );
+            }
+
+            Cart cart = cartRepository.findByUserIdWithItems(order.getUser().getId())
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Cart",
+                                    "userId",
+                                    order.getUser().getId()
+                            ));
+
+            cart.clearCart();
+            cartRepository.save(cart);
 
             orderRepository.save(order);
 

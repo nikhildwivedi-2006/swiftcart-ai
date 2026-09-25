@@ -42,3 +42,10 @@ build/
 .metadata/
 security code.docx
 *.log
+
+
+# Generated Java compiled files
+**/src/bin/
+
+# Local database backup
+*.sql
