@@ -49,3 +49,19 @@ jobs:
 
       - name: Push frontend image to Docker Hub
         run: docker push nikhilcicd/swiftcart-frontend:latest
+
+       deploy:
+    needs: backend-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/swiftcart
+            docker compose pull
+            docker compose up -d
