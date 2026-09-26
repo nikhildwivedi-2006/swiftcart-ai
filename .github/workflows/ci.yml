@@ -50,7 +50,7 @@ jobs:
       - name: Push frontend image to Docker Hub
         run: docker push nikhilcicd/swiftcart-frontend:latest
 
-       deploy:
+  deploy:
     needs: backend-build
     runs-on: ubuntu-latest
 
