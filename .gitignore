@@ -49,3 +49,7 @@ security code.docx
 
 # Local database backup
 *.sql
+
+# CI/CD pipeline practice
+
+
